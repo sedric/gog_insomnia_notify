@@ -1,0 +1,19 @@
+[insomnia]
+# URL that contain deal's JSON data
+url             = https://www.gog.com/insomnia/current_deal
+# A list of games you want to watch. You can import your wishlist with:
+#   lgogdownloader --wishlist | grep https | cut -d'/' -f 5 > wishlist
+# Bundles on games in a bundle can't be watched, sorry
+wishlist        = ./wishlist
+# Too many to list, see JSON output, but you probably know it
+my_country_code = FR
+# Currently supported GOG values are AUD EUR GBP RUB USD
+# See JSON output
+my_currency     = EUR
+# Notifier program
+cmd             = echo -n
+# INFO let you see all deals with less details than watched ones
+# DEBUG if you want to track a bug
+# WARNING is a good walue if you just want to launch it in background
+# CRITICAL should be rise only if the deals stops
+loglevel        = WARNING
