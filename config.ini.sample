@@ -11,7 +11,7 @@ my_country_code = FR
 # See JSON output
 my_currency     = EUR
 # Notifier program
-cmd             = echo -n
+cmd             = echo
 # INFO let you see all deals with less details than watched ones
 # DEBUG if you want to track a bug
 # WARNING is a good walue if you just want to launch it in background
