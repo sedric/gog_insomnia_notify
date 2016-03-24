@@ -9,6 +9,19 @@ from time import sleep
 from subprocess import call
 import ConfigParser
 
+# Get JSON data from GOG
+def get_data_from_url(url):
+    try:
+        jsonurl = urllib2.urlopen(url)
+        data    = json.loads(jsonurl.read())
+        return data
+    except urllib2.HTTPError as e:
+        logging.critical("The URL does not exists, the promo as ended")
+        exit(1)
+    except urllib2.URLError as e:
+        logging.debug("Connexion problem, will try again later " + str(e))
+        sleep(1)
+
 # Export config file as a dict
 def get_dict_from_config(conffd):
   config = {}
@@ -72,7 +85,7 @@ def processing(config, data):
     if search(game, config['wishlist']) == 0:
         notify(config['cmd'], game, oldprice, newprice, discount, gameurl)
 
-# Main loop, get JSON data from gog, read the configuration
+# Main loop, read the configuration
 def main():
     config    = {}
     last_game = None
@@ -82,16 +95,7 @@ def main():
     logging.basicConfig(format='%(levelname)s:%(message)s', level=config['insomnia']['loglevel'])
 
     while True:
-        try:
-            jsonurl = urllib2.urlopen(config['insomnia']['url'])
-            data    = json.loads(jsonurl.read())
-        except urllib2.HTTPError as e:
-            logging.critical("The URL does not exists, the promo as ended")
-            exit(1)
-        except urllib2.URLError as e:
-            logging.debug("Connexion problem, will try again later " + e)
-            sleep(1)
-
+        data = get_data_from_url(config['insomnia']['url'])
         try:
             game = data['product']['url'].split("/")[2]
             if not last_game == game:
