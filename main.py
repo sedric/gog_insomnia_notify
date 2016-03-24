@@ -9,6 +9,7 @@ from time import sleep
 from subprocess import call
 import ConfigParser
 
+# Export config file as a dict
 def get_dict_from_config(conffd):
   config = {}
 
@@ -19,6 +20,7 @@ def get_dict_from_config(conffd):
       config[section][option] = data
   return config
 
+# Check if current game in sale is in the wishlist
 def search(game, wishlist):
     fdwishes = open(wishlist, 'r')
     for wish in fdwishes:
@@ -28,6 +30,7 @@ def search(game, wishlist):
     fdwishes.close()
     return 1
 
+# Find the prices that match current country and currency
 def get_prices(cc, currency, countrygrps, pricesgrps):
     group_possible = []
     for group in countrygrps:
@@ -43,6 +46,7 @@ def get_prices(cc, currency, countrygrps, pricesgrps):
             continue
     return prices
 
+# Generate a message and send it via configured command
 def notify(cmd, game, oprice, nprice, discount, gameurl):
     message =  game + "\n"
     message = message +  "  Old price : " + oprice + "\n"
@@ -51,8 +55,8 @@ def notify(cmd, game, oprice, nprice, discount, gameurl):
     message = message +  "  https://gog.com" + gameurl + "\n"
     call([cmd, message])
 
+# Extract usefull informations from JSON et send them to notify()
 def processing(config, data):
-    # Extract data from JSON
     dealtype    = data['dealType']
     deal        = data[dealtype]
     gameurl     = deal['url']
@@ -68,6 +72,7 @@ def processing(config, data):
     if search(game, config['wishlist']) == 0:
         notify(config['cmd'], game, oldprice, newprice, discount, gameurl)
 
+# Main loop, get JSON data from gog, read the configuration
 def main():
     config    = {}
     last_game = None
@@ -93,6 +98,8 @@ def main():
                 processing(config['insomnia'], data)
                 last_game = game
         except KeyError:
+            # Bundles don't have games URL, only game ID, I don't know how to
+            # link them to a game so don't do anything
             game = data['bundle']['description']
             discount = str(data['discount'])
             if not last_game == game:
