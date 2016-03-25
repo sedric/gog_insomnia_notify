@@ -19,8 +19,8 @@ def get_data_from_url(url):
         logging.critical("The URL does not exists, the promo as ended")
         exit(1)
     except urllib2.URLError as e:
-        logging.debug("Connexion problem, will try again later " + str(e))
-        sleep(1)
+        logging.debug("Connection problem, will try again later " + str(e))
+        raise
 
 # Export config file as a dict
 def get_dict_from_config(conffd):
@@ -76,43 +76,47 @@ def processing(config, data):
     game        = gameurl.split("/")[2]
     countrygrps = deal['prices']['countriesGroups']
     pricesgrps  = deal['prices']['groupsPrices']
-    prices      = get_prices(config['my_country_code'],config['my_currency'], countrygrps, pricesgrps)
+    prices      = get_prices(config['my_country_code'], config['my_currency'],
+                             countrygrps,               pricesgrps)
     oldprice    = prices.split(";")[0]
     newprice    = prices.split(";")[1]
     discount    = str(data['discount'])
 
-    logging.info(game + " : " + newprice + config['my_currency'] + " (-" + discount + "%)")
+    logging.info(game + " : " + newprice + config['my_currency'] +
+                 " (-" + discount + "%)")
     if search(game, config['wishlist']) == 0:
         notify(config['cmd'], game, oldprice, newprice, discount, gameurl)
 
 # Main loop, read the configuration
 def main():
     config    = {}
-    last_game = None
     conffd    = ConfigParser.ConfigParser()
     conffd.read("config.ini")
     config    = get_dict_from_config(conffd)
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=config['insomnia']['loglevel'])
+    last_game = None
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        level=config['insomnia']['loglevel'])
 
     while True:
-        data = get_data_from_url(config['insomnia']['url'])
         try:
-            game = data['product']['url'].split("/")[2]
-            if not last_game == game:
-                processing(config['insomnia'], data)
-                last_game = game
-        except KeyError:
-            # Bundles don't have games URL, only game ID, I don't know how to
-            # link them to a game so don't do anything
-            game = data['bundle']['description']
-            discount = str(data['discount'])
-            if not last_game == game:
-                logging.info("Bundle : " + game + " (-" + discount + "%)")
-                last_game = game
-            sleep(10)
-        except NameError:
+            data = get_data_from_url(config['insomnia']['url'])
+            try:
+                game = data['product']['url'].split("/")[2]
+                if not last_game == game:
+                    processing(config['insomnia'], data)
+                    last_game = game
+            except KeyError:
+                # Bundles don't have games URL, only game ID, I don't know how
+                # to link them to a game so don't do anything
+                game = data['bundle']['description']
+                discount = str(data['discount'])
+                if not last_game == game:
+                    logging.info("Bundle : " + game + " (-" + discount + "%)")
+                    last_game = game
+                    sleep(10)
+        except urllib2.URLError:
             # Previous connexion error
-            continue
+            sleep(5)
         sleep(1)
 
 if __name__ == '__main__':
