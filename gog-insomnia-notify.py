@@ -114,6 +114,10 @@ def main():
                     logging.info("Bundle : " + game + " (-" + discount + "%)")
                     last_game = game
                     sleep(10)
+            except TypeError:
+                # Ended promo let a page with a null
+                logging.critical("JSON empty, the promo as ended")
+                exit(1)
         except urllib2.URLError:
             # Previous connexion error
             sleep(5)
